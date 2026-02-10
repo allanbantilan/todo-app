@@ -14,8 +14,8 @@ const TabsLayout = () => {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          height: 100,
-          paddingBottom: 30,
+          height: 60,
+          paddingBottom: 20,
           paddingTop: 10,
         },
 
