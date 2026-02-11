@@ -9,17 +9,14 @@ import ToggleTodo from "@/components/ToggleTodo";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import useTheme from "@/hooks/useTheme";
-import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
   Alert,
   FlatList,
-  Text,
   ToastAndroid,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SystemBars } from "react-native-edge-to-edge";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -170,10 +167,6 @@ export default function Index() {
           ListEmptyComponent={<EmptyState />}
           // showsVerticalScrollIndicator={false}
         />
-
-        <TouchableOpacity onPress={toggleDarkMode}>
-          <Text>Toggle dark mode</Text>
-        </TouchableOpacity>
       </SafeAreaView>
     </LinearGradient>
   );
