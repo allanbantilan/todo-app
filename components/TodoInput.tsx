@@ -5,7 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Alert, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  TextInput,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const TodoInput = () => {
   const { colors } = useTheme();
@@ -18,7 +25,9 @@ const TodoInput = () => {
     if (newTodo.trim()) {
       try {
         await addTodo({ text: newTodo.trim() });
+        ToastAndroid.show("Todo added", ToastAndroid.SHORT);
         setNewTodo("");
+        Keyboard.dismiss();
       } catch (error) {
         console.error("Error adding todo:", error);
         Alert.alert("Error", "Failed to add todo. Please try again.");
