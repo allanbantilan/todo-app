@@ -1,5 +1,6 @@
 import { createHomeStyles } from "@/assets/images/styles/home.styles";
-import Header from "@/components/header";
+import Header from "@/components/Header";
+import TodoInput from "@/components/TodoInput";
 import useTheme from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text, TouchableOpacity } from "react-native";
@@ -21,6 +22,9 @@ export default function Index() {
         edges={["top", "left", "right"]}
       >
         <Header />
+
+        <TodoInput />
+
         <TouchableOpacity onPress={toggleDarkMode}>
           <Text>Toggle dark mode</Text>
         </TouchableOpacity>

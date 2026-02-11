@@ -43,18 +43,23 @@ const Header = () => {
       {totalCount > 0 && (
         <View style={homeStyles.progressContainer}>
           <View style={homeStyles.progressBarContainer}>
-            <View style={homeStyles.progressBar}>
-              <LinearGradient
-                colors={colors.gradients.primary}
-                style={[
-                  homeStyles.progressFill,
-                  { width: `${progressPercentage}%` },
-                ]}
-              />
-              <Text
-                style={homeStyles.progressText}
-              >{`${Math.round(progressPercentage)}%`}</Text>
+            {/* Progress Bar */}
+            <View style={{ flex: 1 }}>
+              <View style={homeStyles.progressBar}>
+                <LinearGradient
+                  colors={colors.gradients.primary}
+                  style={[
+                    homeStyles.progressFill,
+                    { width: `${progressPercentage}%` },
+                  ]}
+                />
+              </View>
             </View>
+
+            {/* Percentage Text */}
+            <Text style={homeStyles.progressText}>
+              {Math.round(progressPercentage)}%
+            </Text>
           </View>
         </View>
       )}
