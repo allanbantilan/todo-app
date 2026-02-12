@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "todo.app"
+      "package": "com.todoapp.main"
     },
     "web": {
       "output": "static",
@@ -52,7 +52,7 @@
       [
         "expo-notifications",
         {
-          "color": "./assets/images/notification-icon.png"
+          "icon": "./assets/images/notification-icon.png"
         }
       ]
     ],
