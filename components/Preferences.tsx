@@ -1,5 +1,7 @@
 import { createSettingsStyles } from "@/assets/styles/settings.styles";
+import { useNotifications } from "@/hooks/useNotification";
 import useTheme from "@/hooks/useTheme";
+import { useTodoNotification } from "@/hooks/Usetodonotification";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -7,7 +9,13 @@ import { Switch, Text, View } from "react-native";
 
 const Preferences = () => {
   const [isAutoSync, setIsAutoSync] = useState(false);
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
+  const {
+    isNotificationsEnabled,
+    isLoading: isNotificationsLoading,
+    handleToggle,
+  } = useNotifications();
+
+  useTodoNotification(isNotificationsEnabled);
 
   const { colors, isDarkMode, toggleDarkMode } = useTheme();
 
@@ -52,9 +60,8 @@ const Preferences = () => {
         </View>
         <Switch
           value={isNotificationsEnabled}
-          onValueChange={() =>
-            setIsNotificationsEnabled(!isNotificationsEnabled)
-          }
+          onValueChange={handleToggle}
+          disabled={isNotificationsLoading}
           thumbColor={"#fff"}
           trackColor={{ false: colors.border, true: colors.warning }}
         />
