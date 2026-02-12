@@ -52,7 +52,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/notification-icon.png"
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff"
         }
       ]
     ],
@@ -64,7 +65,8 @@
       "router": {},
       "eas": {
         "projectId": "ae40e9c1-cbdc-4352-89c1-f797d5a8b460"
-      }
+      },
+      "convexUrl": "https://effervescent-crab-136.convex.cloud"
     }
   }
 }

@@ -1,10 +1,16 @@
 import { SyncProvider } from "@/contexts/SyncContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convexUrl =
+  Constants.expoConfig?.extra?.convexUrl ||
+  process.env.EXPO_PUBLIC_CONVEX_URL ||
+  "";
+
+const convex = new ConvexReactClient(convexUrl, {
   unsavedChangesWarning: false,
 });
 
