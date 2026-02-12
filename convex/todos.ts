@@ -9,11 +9,22 @@ export const getTodos = query({
 });
 
 export const addTodo = mutation({
-  args: { text: v.string() },
+  args: {
+    text: v.string(),
+    category: v.string(),
+    priority: v.string(),
+  },
   handler: async (ctx, args) => {
+    // Validate priority
+    if (!["High", "Medium", "Low"].includes(args.priority)) {
+      throw new ConvexError("Priority must be 'High', 'Medium', or 'Low'");
+    }
+
     const todoId = await ctx.db.insert("todos", {
       text: args.text,
       isCompleted: false,
+      category: args.category,
+      priority: args.priority,
     });
 
     return todoId;
@@ -41,11 +52,30 @@ export const deleteTodo = mutation({
 });
 
 export const updateTodo = mutation({
-  args: { id: v.id("todos"), text: v.string() },
+  args: {
+    id: v.id("todos"),
+    text: v.string(),
+    category: v.optional(v.string()),
+    priority: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, {
+    const updates: any = {
       text: args.text,
-    });
+    };
+
+    if (args.category !== undefined) {
+      updates.category = args.category;
+    }
+
+    if (args.priority !== undefined) {
+      // Validate priority if provided
+      if (!["High", "Medium", "Low"].includes(args.priority)) {
+        throw new ConvexError("Priority must be 'High', 'Medium', or 'Low'");
+      }
+      updates.priority = args.priority;
+    }
+
+    await ctx.db.patch(args.id, updates);
   },
 });
 

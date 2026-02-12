@@ -21,6 +21,10 @@ export interface ColorScheme {
   warning: string;
   danger: string;
   shadow: string;
+  priorityHigh: string;
+  priorityMedium: string;
+  priorityLow: string;
+  modalBackdrop: string;
   gradients: {
     background: [string, string];
     surface: [string, string];
@@ -49,6 +53,10 @@ const lightColors: ColorScheme = {
   warning: "#f59e0b",
   danger: "#ef4444",
   shadow: "#000000",
+  priorityHigh: "#ef4444",
+  priorityMedium: "#f59e0b",
+  priorityLow: "#10b981",
+  modalBackdrop: "rgba(0, 0, 0, 0.5)",
   gradients: {
     background: ["#f8fafc", "#e2e8f0"],
     surface: ["#ffffff", "#f8fafc"],
@@ -77,6 +85,10 @@ const darkColors: ColorScheme = {
   warning: "#fbbf24",
   danger: "#f87171",
   shadow: "#000000",
+  priorityHigh: "#f87171",
+  priorityMedium: "#fbbf24",
+  priorityLow: "#34d399",
+  modalBackdrop: "rgba(0, 0, 0, 0.7)",
   gradients: {
     background: ["#0f172a", "#1e293b"],
     surface: ["#1e293b", "#334155"],

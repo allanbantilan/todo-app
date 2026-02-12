@@ -1,71 +1,34 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import { api } from "@/convex/_generated/api";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
-import {
-  Alert,
-  Keyboard,
-  TextInput,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 
-const TodoInput = () => {
+interface TodoInputProps {
+  onOpenModal: () => void;
+}
+
+const TodoInput: React.FC<TodoInputProps> = ({ onOpenModal }) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
 
-  const [newTodo, setNewTodo] = useState("");
-  const addTodo = useMutation(api.todos.addTodo);
-
-  const handleAddTodo = async () => {
-    if (newTodo.trim()) {
-      try {
-        await addTodo({ text: newTodo.trim() });
-        ToastAndroid.show("Todo added", ToastAndroid.SHORT);
-        setNewTodo("");
-        Keyboard.dismiss();
-      } catch (error) {
-        console.error("Error adding todo:", error);
-        Alert.alert("Error", "Failed to add todo. Please try again.");
-      }
-    }
-  };
-
   return (
     <View style={homeStyles.inputSection}>
-      <View style={homeStyles.inputWrapper}>
-        <TextInput
-          style={homeStyles.input}
-          placeholder="Add a new task..."
-          value={newTodo}
-          onChangeText={setNewTodo}
-          onSubmitEditing={handleAddTodo}
-          multiline
-          placeholderTextColor={colors.textMuted}
-        />
-
-        <TouchableOpacity
-          onPress={handleAddTodo}
-          activeOpacity={0.8}
-          disabled={!newTodo.trim()}
+      <TouchableOpacity
+        onPress={onOpenModal}
+        activeOpacity={0.8}
+        style={{ flex: 1 }}
+      >
+        <LinearGradient
+          colors={colors.gradients.primary}
+          style={homeStyles.addTodoButton}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
         >
-          <LinearGradient
-            colors={
-              newTodo.trim() ? colors.gradients.primary : colors.gradients.muted
-            }
-            style={[
-              homeStyles.addButton,
-              !newTodo.trim() && homeStyles.addButtonDisabled,
-            ]}
-          >
-            <Ionicons name="add" size={24} color="#ffffff" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+          <Ionicons name="add-circle" size={24} color="#ffffff" />
+          <Text style={homeStyles.addTodoButtonText}>Add New Todo</Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 };

@@ -107,33 +107,44 @@ function clearExistingReminderTimer(
 // ─── Notification logic ───────────────────────────────────────────────────────
 
 async function fireCongratsNotification(totalCount: number) {
-  await Notifications.scheduleNotificationAsync({
-    identifier: "todo-congrats",
-    content: {
-      title: "You crushed it today! 🎉",
-      body: `All ${totalCount} task${totalCount === 1 ? "" : "s"} completed. Great work!`,
-    },
-    trigger: null, // fires immediately
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: "todo-congrats",
+      content: {
+        title: "You crushed it today! 🎉",
+        body:
+          totalCount === 1
+            ? "Your task is completed. Great work!"
+            : `All ${totalCount} tasks completed. Great work!`,
+      },
+      trigger: null, // fires immediately
+    });
+  } catch (error) {
+    console.warn("Failed to fire congrats notification:", error);
+  }
 }
 
 async function fire5HourReminderNotification(incompleteCount: number) {
-  // Cancel any stale reminder before firing a fresh one
-  await Notifications.cancelScheduledNotificationAsync("todo-reminder").catch(
-    () => {},
-  );
+  try {
+    // Cancel any stale reminder before firing a fresh one
+    await Notifications.cancelScheduledNotificationAsync("todo-reminder").catch(
+      () => {},
+    );
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: "todo-reminder",
-    content: {
-      title: "Don't forget your tasks! ⏰",
-      body:
-        incompleteCount === 1
-          ? "You still have 1 task pending. Take a moment to finish it!"
-          : `You still have ${incompleteCount} tasks pending. Take a moment to finish them!`,
-    },
-    trigger: null,
-  });
+    await Notifications.scheduleNotificationAsync({
+      identifier: "todo-reminder",
+      content: {
+        title: "Don't forget your tasks! ⏰",
+        body:
+          incompleteCount === 1
+            ? "You still have 1 task pending. Take a moment to finish it!"
+            : `You still have ${incompleteCount} tasks pending. Take a moment to finish them!`,
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.warn("Failed to fire 5-hour reminder notification:", error);
+  }
 }
 
 async function firePendingSummaryNotification(todos: Todo[]) {
@@ -142,20 +153,24 @@ async function firePendingSummaryNotification(todos: Todo[]) {
   // All done — the congrats already fired in-app, skip this
   if (incomplete.length === 0) return;
 
-  // Cancel any stale pending summary before firing a fresh one
-  await Notifications.cancelScheduledNotificationAsync("todo-pending").catch(
-    () => {},
-  );
+  try {
+    // Cancel any stale pending summary before firing a fresh one
+    await Notifications.cancelScheduledNotificationAsync("todo-pending").catch(
+      () => {},
+    );
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: "todo-pending",
-    content: {
-      title: "You still have pending tasks 📝",
-      body:
-        incomplete.length === 1
-          ? "1 task left for today. You've got this!"
-          : `${incomplete.length} tasks left for today. Keep going!`,
-    },
-    trigger: null,
-  });
+    await Notifications.scheduleNotificationAsync({
+      identifier: "todo-pending",
+      content: {
+        title: "You still have pending tasks 📝",
+        body:
+          incomplete.length === 1
+            ? "1 task left for today. You've got this!"
+            : `${incomplete.length} tasks left for today. Keep going!`,
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.warn("Failed to fire pending summary notification:", error);
+  }
 }

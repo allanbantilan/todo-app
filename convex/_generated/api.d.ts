@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as migrations from "../migrations.js";
 import type * as todos from "../todos.js";
 
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  migrations: typeof migrations;
   todos: typeof todos;
 }>;
 

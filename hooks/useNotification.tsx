@@ -1,17 +1,26 @@
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Linking } from "react-native";
 
+// Check if running in Expo Go
+const isExpoGo = Constants.appOwnership === "expo";
+
 // How notifications are presented when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  // Silently fail in Expo Go
+  console.warn("Notifications not available in Expo Go");
+}
 
 export function useNotifications() {
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
@@ -20,13 +29,34 @@ export function useNotifications() {
   // On mount, check the current permission status and sync the toggle
   useEffect(() => {
     (async () => {
-      const { status } = await Notifications.getPermissionsAsync();
-      setIsNotificationsEnabled(status === "granted");
-      setIsLoading(false);
+      try {
+        if (isExpoGo) {
+          // Notifications not available in Expo Go
+          setIsNotificationsEnabled(false);
+          setIsLoading(false);
+          return;
+        }
+        const { status } = await Notifications.getPermissionsAsync();
+        setIsNotificationsEnabled(status === "granted");
+      } catch (error) {
+        console.warn("Error checking notification permissions:", error);
+        setIsNotificationsEnabled(false);
+      } finally {
+        setIsLoading(false);
+      }
     })();
   }, []);
 
   const handleToggle = useCallback(async () => {
+    if (isExpoGo) {
+      Alert.alert(
+        "Notifications Unavailable",
+        "Push notifications are not supported in Expo Go. Please use a development build to enable notifications.\n\nLearn more at: https://docs.expo.dev/develop/development-builds/introduction/",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
     if (isNotificationsEnabled) {
       // Turning OFF — OS doesn't allow programmatic revocation,
       // so we guide the user to Settings instead.
@@ -45,48 +75,53 @@ export function useNotifications() {
     }
 
     // Turning ON — request permission
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    try {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
 
-    // If previously denied, the OS won't show the prompt again — send to Settings
-    if (existingStatus === "denied") {
-      Alert.alert(
-        "Enable Notifications",
-        "Notifications were previously denied. Please enable them in your device Settings.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Open Settings",
-            onPress: () => Linking.openSettings(),
-          },
-        ],
-      );
-      return;
-    }
+      // If previously denied, the OS won't show the prompt again — send to Settings
+      if (existingStatus === "denied") {
+        Alert.alert(
+          "Enable Notifications",
+          "Notifications were previously denied. Please enable them in your device Settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Settings",
+              onPress: () => Linking.openSettings(),
+            },
+          ],
+        );
+        return;
+      }
 
-    // First-time request — the OS will show its native permission dialog
-    const { status } = await Notifications.requestPermissionsAsync({
-      ios: {
-        allowAlert: true,
-        allowBadge: true,
-        allowSound: true,
-      },
-    });
-
-    if (status === "granted") {
-      setIsNotificationsEnabled(true);
-
-      // Optional: fire a test notification so the user sees it working
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Notifications enabled! 🔔",
-          body: "You'll now receive notifications from this app.",
+      // First-time request — the OS will show its native permission dialog
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
         },
-        trigger: null, // null = show immediately
       });
-    } else {
-      // User tapped "Don't Allow"
-      setIsNotificationsEnabled(false);
+
+      if (status === "granted") {
+        setIsNotificationsEnabled(true);
+
+        // Optional: fire a test notification so the user sees it working
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Notifications enabled! 🔔",
+            body: "You'll now receive notifications from this app.",
+          },
+          trigger: null, // null = show immediately
+        });
+      } else {
+        // User tapped "Don't Allow"
+        setIsNotificationsEnabled(false);
+      }
+    } catch (error) {
+      console.warn("Error toggling notifications:", error);
+      Alert.alert("Error", "Failed to toggle notifications. Please try again.");
     }
   }, [isNotificationsEnabled]);
 
