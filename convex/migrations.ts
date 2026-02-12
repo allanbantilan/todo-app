@@ -25,3 +25,26 @@ export const migrateTodos = mutation({
     };
   },
 });
+
+// Run this once to clear todos that don't have a userId (pre-auth todos)
+export const clearPreAuthTodos = mutation({
+  handler: async (ctx) => {
+    const allTodos = await ctx.db.query("todos").collect();
+
+    let deletedCount = 0;
+
+    for (const todo of allTodos) {
+      // Delete todos without userId (from before auth was added)
+      if (!(todo as any).userId) {
+        await ctx.db.delete(todo._id);
+        deletedCount++;
+      }
+    }
+
+    return {
+      message: `Cleared ${deletedCount} pre-auth todos.`,
+      totalTodos: allTodos.length,
+      deletedTodos: deletedCount,
+    };
+  },
+});

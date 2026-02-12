@@ -3,7 +3,17 @@ import { mutation, query } from "./_generated/server";
 
 export const getTodos = query({
   handler: async (ctx) => {
-    const todos = await ctx.db.query("todos").order("desc").collect();
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      return [];
+    }
+
+    const todos = await ctx.db
+      .query("todos")
+      .withIndex("by_user", (q) => q.eq("userId", userId.subject))
+      .order("desc")
+      .collect();
     return todos;
   },
 });
@@ -15,6 +25,12 @@ export const addTodo = mutation({
     priority: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      throw new ConvexError("User must be authenticated");
+    }
+
     // Validate priority
     if (!["High", "Medium", "Low"].includes(args.priority)) {
       throw new ConvexError("Priority must be 'High', 'Medium', or 'Low'");
@@ -25,6 +41,7 @@ export const addTodo = mutation({
       isCompleted: false,
       category: args.category,
       priority: args.priority,
+      userId: userId.subject,
     });
 
     return todoId;
@@ -34,10 +51,20 @@ export const addTodo = mutation({
 export const toggleTodo = mutation({
   args: { id: v.id("todos") },
   handler: async (ctx, args) => {
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      throw new ConvexError("User must be authenticated");
+    }
+
     const todo = await ctx.db.get(args.id);
 
     if (!todo) {
       throw new ConvexError("Todo not found");
+    }
+
+    if (todo.userId !== userId.subject) {
+      throw new ConvexError("Unauthorized");
     }
 
     await ctx.db.patch(args.id, { isCompleted: !todo.isCompleted });
@@ -47,6 +74,22 @@ export const toggleTodo = mutation({
 export const deleteTodo = mutation({
   args: { id: v.id("todos") },
   handler: async (ctx, args) => {
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      throw new ConvexError("User must be authenticated");
+    }
+
+    const todo = await ctx.db.get(args.id);
+
+    if (!todo) {
+      throw new ConvexError("Todo not found");
+    }
+
+    if (todo.userId !== userId.subject) {
+      throw new ConvexError("Unauthorized");
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -59,6 +102,22 @@ export const updateTodo = mutation({
     priority: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      throw new ConvexError("User must be authenticated");
+    }
+
+    const todo = await ctx.db.get(args.id);
+
+    if (!todo) {
+      throw new ConvexError("Todo not found");
+    }
+
+    if (todo.userId !== userId.subject) {
+      throw new ConvexError("Unauthorized");
+    }
+
     const updates: any = {
       text: args.text,
     };
@@ -81,7 +140,16 @@ export const updateTodo = mutation({
 
 export const clearAllTodos = mutation({
   handler: async (ctx) => {
-    const allTodos = await ctx.db.query("todos").collect();
+    const userId = await ctx.auth.getUserIdentity();
+
+    if (!userId) {
+      throw new ConvexError("User must be authenticated");
+    }
+
+    const allTodos = await ctx.db
+      .query("todos")
+      .withIndex("by_user", (q) => q.eq("userId", userId.subject))
+      .collect();
 
     for (const todo of allTodos) {
       await ctx.db.delete(todo._id);

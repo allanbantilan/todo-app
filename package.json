@@ -11,6 +11,8 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@convex-dev/auth": "^0.0.90",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
@@ -20,6 +22,7 @@
     "@react-navigation/native": "^7.1.8",
     "@zoontek/react-native-navigation-bar": "^1.0.2",
     "convex": "^1.31.7",
+    "convex-helpers": "^0.1.112",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
