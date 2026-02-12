@@ -1,14 +1,41 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
+import { useSyncStatus } from "@/contexts/SyncContext";
 import { api } from "@/convex/_generated/api";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
-import { Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Text, View } from "react-native";
 
 const Header = () => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
+  const { syncStatus, hasUnsyncedChanges } = useSyncStatus();
+  const { isOnline } = useNetworkStatus();
+
+  const spinValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (syncStatus === "syncing") {
+      // Start spinning animation
+      Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ).start();
+    } else {
+      spinValue.setValue(0);
+    }
+  }, [syncStatus, spinValue]);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   const todos = useQuery(api.todos.getTodos);
 
@@ -20,6 +47,34 @@ const Header = () => {
 
   const progressPercentage =
     totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  // Determine sync status text
+  const getSyncStatusText = () => {
+    if (!isOnline) return null;
+
+    // Check for unsynced changes first
+    if (
+      hasUnsyncedChanges &&
+      (syncStatus === "idle" || syncStatus === "error")
+    ) {
+      return "Unsynced data";
+    }
+
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "synced":
+        return "All synced";
+      case "error":
+        return "Sync failed";
+      case "idle":
+        return "All synced"; // Idle means everything is synced
+      default:
+        return null;
+    }
+  };
+
+  const syncStatusText = getSyncStatusText();
 
   return (
     <View style={homeStyles.header}>
@@ -36,6 +91,78 @@ const Header = () => {
           <Text
             style={homeStyles.subtitle}
           >{`${completedCount} of ${totalCount} completed`}</Text>
+        </View>
+
+        {/* Network & Sync Status Indicator */}
+        <View
+          style={{
+            marginLeft: "auto",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {!isOnline ? (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <Ionicons
+                name="cloud-offline"
+                size={16}
+                color={colors.textMuted}
+              />
+              <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                Offline
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              {/* Sync Status Icon */}
+              {syncStatus === "syncing" && (
+                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                  <Ionicons name="sync" size={18} color={colors.primary} />
+                </Animated.View>
+              )}
+              {syncStatus === "synced" && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={colors.success}
+                />
+              )}
+              {syncStatus === "error" && (
+                <Ionicons name="alert-circle" size={18} color={colors.danger} />
+              )}
+              {syncStatus === "idle" && !hasUnsyncedChanges && (
+                <Ionicons name="cloud-done" size={18} color={colors.success} />
+              )}
+              {syncStatus === "idle" && hasUnsyncedChanges && (
+                <Ionicons name="warning" size={18} color={colors.warning} />
+              )}
+
+              {/* Sync Status Text */}
+              {syncStatusText && (
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color:
+                      syncStatus === "syncing"
+                        ? colors.primary
+                        : syncStatus === "error"
+                          ? colors.danger
+                          : hasUnsyncedChanges
+                            ? colors.warning
+                            : colors.success,
+                    fontWeight: "500",
+                  }}
+                >
+                  {syncStatusText}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
       </View>
 

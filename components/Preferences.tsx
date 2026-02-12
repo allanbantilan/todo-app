@@ -1,14 +1,18 @@
 import { createSettingsStyles } from "@/assets/styles/settings.styles";
+import { useAutoSync } from "@/hooks/useAutoSync";
 import { useNotifications } from "@/hooks/useNotification";
 import useTheme from "@/hooks/useTheme";
 import { useTodoNotification } from "@/hooks/Usetodonotification";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
 import { Switch, Text, View } from "react-native";
 
 const Preferences = () => {
-  const [isAutoSync, setIsAutoSync] = useState(false);
+  const {
+    isAutoSyncEnabled,
+    isLoading: isAutoSyncLoading,
+    toggleAutoSync,
+  } = useAutoSync();
   const {
     isNotificationsEnabled,
     isLoading: isNotificationsLoading,
@@ -79,8 +83,9 @@ const Preferences = () => {
           <Text style={settingsStyles.settingText}>Auto-Sync</Text>
         </View>
         <Switch
-          value={isAutoSync}
-          onValueChange={() => setIsAutoSync(!isAutoSync)}
+          value={isAutoSyncEnabled}
+          onValueChange={toggleAutoSync}
+          disabled={isAutoSyncLoading}
           thumbColor={"#fff"}
           trackColor={{ false: colors.border, true: colors.success }}
         />

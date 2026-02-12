@@ -1,20 +1,22 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
+import { useSyncStatus } from "@/contexts/SyncContext";
 import { api } from "@/convex/_generated/api";
+import { useAutoSync } from "@/hooks/useAutoSync";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
-    Alert,
-    Keyboard,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    ToastAndroid,
-    TouchableOpacity,
-    View,
+  Alert,
+  Keyboard,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type Priority = "High" | "Medium" | "Low";
@@ -35,6 +37,8 @@ interface AddTodoModalProps {
 const AddTodoModal: React.FC<AddTodoModalProps> = ({ visible, onClose }) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
+  const { startSync, finishSync, errorSync } = useSyncStatus();
+  const { isAutoSyncEnabled } = useAutoSync();
 
   const [todoText, setTodoText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -68,17 +72,20 @@ const AddTodoModal: React.FC<AddTodoModalProps> = ({ visible, onClose }) => {
     }
 
     try {
+      if (isAutoSyncEnabled) startSync();
       await addTodo({
         text: todoText.trim(),
         category: finalCategory,
         priority: selectedPriority,
       });
+      if (isAutoSyncEnabled) finishSync();
 
       ToastAndroid.show("Todo added successfully", ToastAndroid.SHORT);
       resetForm();
       onClose();
       Keyboard.dismiss();
     } catch (error) {
+      if (isAutoSyncEnabled) errorSync();
       console.error("Error adding todo:", error);
       Alert.alert("Error", "Failed to add todo. Please try again.");
     }

@@ -1,6 +1,8 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
+import { useSyncStatus } from "@/contexts/SyncContext";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
+import { useAutoSync } from "@/hooks/useAutoSync";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
@@ -41,6 +43,8 @@ const EditTodoModal: React.FC<EditTodoModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
+  const { startSync, finishSync, errorSync } = useSyncStatus();
+  const { isAutoSyncEnabled } = useAutoSync();
 
   const [todoText, setTodoText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -98,18 +102,21 @@ const EditTodoModal: React.FC<EditTodoModalProps> = ({
     }
 
     try {
+      if (isAutoSyncEnabled) startSync();
       await updateTodo({
         id: todo._id,
         text: todoText.trim(),
         category: finalCategory,
         priority: selectedPriority,
       });
+      if (isAutoSyncEnabled) finishSync();
 
       ToastAndroid.show("Todo updated successfully", ToastAndroid.SHORT);
       resetForm();
       onClose();
       Keyboard.dismiss();
     } catch (error) {
+      if (isAutoSyncEnabled) errorSync();
       console.error("Error updating todo:", error);
       Alert.alert("Error", "Failed to update todo. Please try again.");
     }

@@ -7,20 +7,22 @@ import Header from "@/components/Header";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import TodoList from "@/components/TodoList";
 import ToggleTodo from "@/components/ToggleTodo";
+import { useSyncStatus } from "@/contexts/SyncContext";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
+import { useAutoSync } from "@/hooks/useAutoSync";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  Text,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    Text,
+    ToastAndroid,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SystemBars } from "react-native-edge-to-edge";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,6 +32,8 @@ type SortOption = "default" | "highFirst" | "lowFirst";
 
 export default function Index() {
   const { toggleDarkMode, colors } = useTheme();
+  const { startSync, finishSync, errorSync } = useSyncStatus();
+  const { isAutoSyncEnabled } = useAutoSync();
 
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -103,13 +107,16 @@ export default function Index() {
 
   const handleToggleTodo = async (id: Id<"todos">, isCompleted: boolean) => {
     try {
+      if (isAutoSyncEnabled) startSync();
       await toggleTodo({ id });
+      if (isAutoSyncEnabled) finishSync();
 
       ToastAndroid.show(
         isCompleted ? "Marked as incomplete" : "Marked as completed",
         ToastAndroid.SHORT,
       );
     } catch (error) {
+      if (isAutoSyncEnabled) errorSync();
       Alert.alert("Error", "Failed to toggle todo. Please try again.");
       console.error(error);
     }
@@ -129,10 +136,13 @@ export default function Index() {
           style: "destructive",
           onPress: async () => {
             try {
+              if (isAutoSyncEnabled) startSync();
               await deleteTodo({ id });
+              if (isAutoSyncEnabled) finishSync();
 
               ToastAndroid.show("Todo deleted", ToastAndroid.SHORT);
             } catch (error) {
+              if (isAutoSyncEnabled) errorSync();
               Alert.alert("Error", "Failed to delete todo. Please try again.");
               console.error(error);
             }
