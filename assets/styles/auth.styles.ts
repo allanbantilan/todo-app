@@ -77,7 +77,7 @@ export const createAuthStyles = (colors: ColorScheme) => {
     hintText: {
       fontSize: 12,
       color: colors.textMuted,
-      marginTop: 6,
+      marginBottom: 10,
       marginLeft: 4,
       lineHeight: 16,
     },

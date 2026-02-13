@@ -8,14 +8,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function RegisterScreen() {
@@ -146,7 +146,7 @@ export default function RegisterScreen() {
               />
 
               <AuthInput
-                label="Password"
+                label="Create Password"
                 placeholder="Create a password"
                 value={password}
                 onChangeText={(text) => {
@@ -161,7 +161,7 @@ export default function RegisterScreen() {
               />
               {!errors.password && (
                 <Text style={authStyles.hintText}>
-                  Must be 8+ characters with uppercase, lowercase, and number
+                  Use 8+ characters with uppercase, lowercase, and a number
                 </Text>
               )}
 
