@@ -1,7 +1,7 @@
 import { createAuthStyles } from "@/assets/styles/auth.styles";
 import { AuthButton } from "@/components/AuthButton";
 import { AuthInput } from "@/components/AuthInput";
-import { useAuth } from "@/contexts/AuthContext";
+import { AppAuthError, useAuth } from "@/contexts/AuthContext";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,7 +14,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SystemBars } from "react-native-edge-to-edge";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -43,12 +43,9 @@ export default function LoginScreen() {
       isValid = false;
     }
 
-    // Password validation
+    // Password validation (login only requires a password)
     if (!password) {
       newErrors.password = "Password is required";
-      isValid = false;
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
       isValid = false;
     }
 
@@ -61,18 +58,45 @@ export default function LoginScreen() {
       return;
     }
 
+    setErrors({ email: "", password: "" });
     setLoading(true);
     try {
       console.log("Attempting login with email:", email.trim());
       await signIn(email.trim(), password);
       console.log("Login successful, navigating to tabs");
       router.replace("/(tabs)");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
-      Alert.alert(
-        "Login Failed",
-        error.message || "Invalid email or password. Please try again.",
-      );
+
+      if (error instanceof AppAuthError) {
+        switch (error.code) {
+          case "INVALID_CREDENTIALS":
+            setErrors((prev) => ({ ...prev, password: "Incorrect password" }));
+            Alert.alert("Login Failed", "Incorrect email or password.");
+            return;
+          case "USER_NOT_FOUND":
+            setErrors((prev) => ({
+              ...prev,
+              email: "No account found with this email",
+            }));
+            Alert.alert("Login Failed", "No account found for this email.");
+            return;
+          case "RATE_LIMITED":
+            Alert.alert(
+              "Too Many Attempts",
+              "Too many login attempts. Please try again in a moment.",
+            );
+            return;
+          default:
+            Alert.alert(
+              "Login Failed",
+              "Unable to sign in. Please check your email and password.",
+            );
+            return;
+        }
+      }
+
+      Alert.alert("Login Failed", "Unable to sign in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -83,13 +107,15 @@ export default function LoginScreen() {
       <SystemBars style={colors.statusBarStyle} />
       <SafeAreaView style={authStyles.safeArea}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={authStyles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            automaticallyAdjustKeyboardInsets
+            contentInsetAdjustmentBehavior="always"
           >
             <View style={authStyles.logoContainer}>
               <LinearGradient
@@ -113,7 +139,7 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
-                  setErrors({ ...errors, email: "" });
+                  setErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 error={errors.email}
                 keyboardType="email-address"
@@ -128,7 +154,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
-                  setErrors({ ...errors, password: "" });
+                  setErrors((prev) => ({ ...prev, password: "" }));
                 }}
                 error={errors.password}
                 secureTextEntry

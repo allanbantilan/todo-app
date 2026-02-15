@@ -12,9 +12,10 @@ export const createAuthStyles = (colors: ColorScheme) => {
     },
     scrollContent: {
       flexGrow: 1,
-      justifyContent: "center",
+      justifyContent: "flex-start",
       paddingHorizontal: 24,
-      paddingVertical: 40,
+      paddingTop: 24,
+      paddingBottom: 40,
     },
     logoContainer: {
       alignItems: "center",
@@ -55,6 +56,9 @@ export const createAuthStyles = (colors: ColorScheme) => {
     },
     inputContainer: {
       borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "transparent",
+      backgroundColor: colors.surface,
       overflow: "hidden",
     },
     input: {
@@ -62,10 +66,9 @@ export const createAuthStyles = (colors: ColorScheme) => {
       paddingHorizontal: 16,
       fontSize: 16,
       color: colors.text,
-      backgroundColor: colors.surface,
+      backgroundColor: "transparent",
     },
     inputError: {
-      borderWidth: 1,
       borderColor: colors.danger,
     },
     errorText: {
@@ -73,6 +76,8 @@ export const createAuthStyles = (colors: ColorScheme) => {
       color: colors.danger,
       marginTop: 6,
       marginLeft: 4,
+      minHeight: 18,
+      lineHeight: 18,
     },
     hintText: {
       fontSize: 12,

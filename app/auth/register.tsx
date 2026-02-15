@@ -1,7 +1,7 @@
 import { createAuthStyles } from "@/assets/styles/auth.styles";
 import { AuthButton } from "@/components/AuthButton";
 import { AuthInput } from "@/components/AuthInput";
-import { useAuth } from "@/contexts/AuthContext";
+import { AppAuthError, useAuth } from "@/contexts/AuthContext";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -84,20 +84,52 @@ export default function RegisterScreen() {
       return;
     }
 
+    setErrors({ email: "", password: "", confirmPassword: "" });
     setLoading(true);
     try {
       console.log("Attempting signup with email:", email.trim());
       await signUp(email.trim(), password);
       console.log("Signup successful, navigating to tabs");
       router.replace("/(tabs)");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-      Alert.alert(
-        "Registration Failed",
-        error.message || "Unable to create account. Please try again.",
-      );
+
+      if (error instanceof AppAuthError) {
+        switch (error.code) {
+          case "EMAIL_IN_USE":
+            setErrors((prev) => ({ ...prev, email: "Email is already in use" }));
+            Alert.alert(
+              "Registration Failed",
+              "This email is already in use. Try signing in instead.",
+            );
+            return;
+          case "INVALID_EMAIL":
+            setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
+            Alert.alert("Registration Failed", "Please enter a valid email address.");
+            return;
+          case "WEAK_PASSWORD":
+            setErrors((prev) => ({
+              ...prev,
+              password: "Use 8+ chars with uppercase, lowercase, and a number",
+            }));
+            Alert.alert(
+              "Registration Failed",
+              "Password does not meet requirements. Use 8+ chars with uppercase, lowercase, and a number.",
+            );
+            return;
+          case "RATE_LIMITED":
+            Alert.alert(
+              "Too Many Attempts",
+              "Too many registration attempts. Please try again shortly.",
+            );
+            return;
+          default:
+            Alert.alert("Registration Failed", "Unable to create account. Please try again.");
+            return;
+        }
+      }
+
+      Alert.alert("Registration Failed", "Unable to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -108,13 +140,15 @@ export default function RegisterScreen() {
       <SystemBars style={colors.statusBarStyle} />
       <SafeAreaView style={authStyles.safeArea}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={authStyles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            automaticallyAdjustKeyboardInsets
+            contentInsetAdjustmentBehavior="always"
           >
             <View style={authStyles.logoContainer}>
               <LinearGradient
@@ -138,7 +172,7 @@ export default function RegisterScreen() {
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
-                  setErrors({ ...errors, email: "" });
+                  setErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 error={errors.email}
                 keyboardType="email-address"
@@ -153,7 +187,7 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
-                  setErrors({ ...errors, password: "" });
+                  setErrors((prev) => ({ ...prev, password: "" }));
                 }}
                 error={errors.password}
                 secureTextEntry
@@ -173,7 +207,7 @@ export default function RegisterScreen() {
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);
-                  setErrors({ ...errors, confirmPassword: "" });
+                  setErrors((prev) => ({ ...prev, confirmPassword: "" }));
                 }}
                 error={errors.confirmPassword}
                 secureTextEntry

@@ -2,6 +2,109 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 import React, { createContext, ReactNode, useContext } from "react";
 
+export type AuthErrorCode =
+  | "INVALID_CREDENTIALS"
+  | "USER_NOT_FOUND"
+  | "EMAIL_IN_USE"
+  | "INVALID_EMAIL"
+  | "WEAK_PASSWORD"
+  | "RATE_LIMITED"
+  | "UNKNOWN";
+
+export class AppAuthError extends Error {
+  code: AuthErrorCode;
+  cause?: unknown;
+
+  constructor(code: AuthErrorCode, message: string, cause?: unknown) {
+    super(message);
+    this.name = "AppAuthError";
+    this.code = code;
+    this.cause = cause;
+  }
+}
+
+const normalizeAuthError = (
+  error: unknown,
+  flow: "signIn" | "signUp",
+): AppAuthError => {
+  const err = error as any;
+  const rawMessage = String(err?.message ?? "");
+  const rawCode = String(err?.code ?? "");
+  const combined = `${rawMessage} ${rawCode}`.toLowerCase();
+
+  if (combined.includes("too many requests") || combined.includes("rate limit")) {
+    return new AppAuthError(
+      "RATE_LIMITED",
+      "Too many attempts. Please try again in a moment.",
+      error,
+    );
+  }
+
+  if (flow === "signIn") {
+    if (
+      combined.includes("invalid credentials") ||
+      combined.includes("invalid password") ||
+      combined.includes("incorrect password") ||
+      combined.includes("wrong password")
+    ) {
+      return new AppAuthError(
+        "INVALID_CREDENTIALS",
+        "Incorrect email or password.",
+        error,
+      );
+    }
+
+    if (
+      combined.includes("user not found") ||
+      combined.includes("account not found") ||
+      combined.includes("no user")
+    ) {
+      return new AppAuthError(
+        "USER_NOT_FOUND",
+        "No account found for this email.",
+        error,
+      );
+    }
+  }
+
+  if (flow === "signUp") {
+    if (
+      combined.includes("already exists") ||
+      combined.includes("already registered") ||
+      combined.includes("email already") ||
+      combined.includes("already in use")
+    ) {
+      return new AppAuthError(
+        "EMAIL_IN_USE",
+        "This email is already in use. Try signing in instead.",
+        error,
+      );
+    }
+
+    if (combined.includes("invalid email")) {
+      return new AppAuthError(
+        "INVALID_EMAIL",
+        "Please enter a valid email address.",
+        error,
+      );
+    }
+
+    if (
+      combined.includes("weak password") ||
+      combined.includes("password") ||
+      combined.includes("at least")
+    ) {
+      return new AppAuthError(
+        "WEAK_PASSWORD",
+        "Password does not meet requirements.",
+        error,
+      );
+    }
+  }
+
+  return new AppAuthError("UNKNOWN", "Authentication failed.", error);
+};
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -30,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signInAction("password", { email, password, flow: "signIn" });
     } catch (error) {
-      throw error;
+      throw normalizeAuthError(error, "signIn");
     }
   };
 
@@ -47,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return result;
     } catch (error) {
       console.error("AuthContext: signUp error:", error);
-      throw error;
+      throw normalizeAuthError(error, "signUp");
     }
   };
 

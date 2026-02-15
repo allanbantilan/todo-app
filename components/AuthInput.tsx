@@ -22,7 +22,7 @@ export function AuthInput({ label, error, ...props }: AuthInputProps) {
           {...props}
         />
       </View>
-      {error && <Text style={authStyles.errorText}>{error}</Text>}
+      <Text style={authStyles.errorText}>{error || " "}</Text>
     </View>
   );
 }
