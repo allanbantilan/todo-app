@@ -6,9 +6,10 @@ import { Text, TextInput, TextInputProps, View } from "react-native";
 interface AuthInputProps extends TextInputProps {
   label: string;
   error?: string;
+  reserveErrorSpace?: boolean;
 }
 
-export function AuthInput({ label, error, ...props }: AuthInputProps) {
+export function AuthInput({ label, error, reserveErrorSpace = true, ...props }: AuthInputProps) {
   const { colors } = useTheme();
   const authStyles = createAuthStyles(colors);
 
@@ -22,7 +23,9 @@ export function AuthInput({ label, error, ...props }: AuthInputProps) {
           {...props}
         />
       </View>
-      <Text style={authStyles.errorText}>{error || " "}</Text>
+      {reserveErrorSpace || error ? (
+        <Text style={authStyles.errorText}>{error || " "}</Text>
+      ) : null}
     </View>
   );
 }

@@ -97,15 +97,24 @@ export default function RegisterScreen() {
       if (error instanceof AppAuthError) {
         switch (error.code) {
           case "EMAIL_IN_USE":
-            setErrors((prev) => ({ ...prev, email: "Email is already in use" }));
+            setErrors((prev) => ({
+              ...prev,
+              email: "Email is already in use",
+            }));
             Alert.alert(
               "Registration Failed",
               "This email is already in use. Try signing in instead.",
             );
             return;
           case "INVALID_EMAIL":
-            setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
-            Alert.alert("Registration Failed", "Please enter a valid email address.");
+            setErrors((prev) => ({
+              ...prev,
+              email: "Please enter a valid email",
+            }));
+            Alert.alert(
+              "Registration Failed",
+              "Please enter a valid email address.",
+            );
             return;
           case "WEAK_PASSWORD":
             setErrors((prev) => ({
@@ -124,12 +133,18 @@ export default function RegisterScreen() {
             );
             return;
           default:
-            Alert.alert("Registration Failed", "Unable to create account. Please try again.");
+            Alert.alert(
+              "Registration Failed",
+              "Unable to create account. Please try again.",
+            );
             return;
         }
       }
 
-      Alert.alert("Registration Failed", "Unable to create account. Please try again.");
+      Alert.alert(
+        "Registration Failed",
+        "Unable to create account. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -194,12 +209,8 @@ export default function RegisterScreen() {
                 autoCapitalize="none"
                 autoComplete="password-new"
                 textContentType="newPassword"
+                reserveErrorSpace={false}
               />
-              {!errors.password && (
-                <Text style={authStyles.hintText}>
-                  Use 8+ characters with uppercase, lowercase, and a number
-                </Text>
-              )}
 
               <AuthInput
                 label="Confirm Password"
