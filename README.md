@@ -1,50 +1,136 @@
-# Welcome to your Expo app 👋
+# Todo App (Expo + Convex)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native Todo app built with Expo Router and Convex.
 
-## Get started
+## Features
+
+- Email/password authentication with Convex Auth
+- Todo CRUD with priority and category
+- Offline-friendly startup for previously signed-in users
+- Auto-sync status and network awareness
+- Settings screen with:
+  - Profile (name + email)
+  - Version
+  - Preferences (dark mode, notifications, auto-sync)
+
+## Tech Stack
+
+- Expo SDK 54 + Expo Router
+- React Native 0.81
+- Convex (`convex`, `@convex-dev/auth`)
+- AsyncStorage + NetInfo
+
+## Prerequisites
+
+- Node.js 18+
+- npm
+- Expo CLI/EAS CLI (via `npx` is fine)
+- Convex account
+
+## Getting Started
 
 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Start Convex (in terminal 1)
 
-## Learn more
+```bash
+npx convex dev
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. Start Expo (in terminal 2)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run start
+```
 
-## Join the community
+## Environment
 
-Join our community of developers creating universal apps.
+This project uses `.env.local` for local Convex setup.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Expected values:
+
+- `CONVEX_DEPLOYMENT`
+- `EXPO_PUBLIC_CONVEX_URL`
+- `EXPO_PUBLIC_CONVEX_SITE_URL`
+
+`npx convex dev` will provision/update deployment values as needed.
+
+## Auth Notes
+
+- Convex auth provider config lives in:
+  - `convex/auth.config.ts`
+- Auth server config lives in:
+  - `convex/auth.ts`
+- Custom password profile stores `name` and `email` on sign-up.
+
+## Convex Schema
+
+Schema is in:
+
+- `convex/schema.ts`
+
+Includes:
+
+- Convex Auth tables (`...authTables`)
+- Explicit `users` table extension with optional `name`
+- `todos` table
+
+## Run Migrations / Utilities
+
+Utility mutations are in:
+
+- `convex/migrations.ts`
+
+Example:
+
+```bash
+npx convex run migrations:cleanupOrphanAuthRecords
+```
+
+## Build with EAS
+
+### Preview build (internal)
+
+```bash
+eas build -p android --profile preview
+eas build -p ios --profile preview
+```
+
+### Production build
+
+```bash
+eas build -p android --profile production
+eas build -p ios --profile production
+```
+
+### Build all
+
+```bash
+eas build -p all --profile production
+```
+
+## Scripts
+
+```bash
+npm run start
+npm run android
+npm run ios
+npm run web
+npm run lint
+```
+
+## Folder Highlights
+
+- `app/` Expo Router screens
+- `components/` UI building blocks
+- `contexts/` Auth and Sync state
+- `hooks/` app hooks (theme, network, auto-sync, notifications)
+- `convex/` backend functions, schema, auth config
+
+## License
+
+Private/internal project.
