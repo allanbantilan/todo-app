@@ -25,11 +25,13 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -37,9 +39,13 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { email: "", password: "", confirmPassword: "" };
+    const newErrors = { name: "", email: "", password: "", confirmPassword: "" };
 
-    // Email validation
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    }
+
     if (!email.trim()) {
       newErrors.email = "Email is required";
       isValid = false;
@@ -48,7 +54,6 @@ export default function RegisterScreen() {
       isValid = false;
     }
 
-    // Password validation - match Convex Auth requirements
     if (!password) {
       newErrors.password = "Password is required";
       isValid = false;
@@ -66,7 +71,6 @@ export default function RegisterScreen() {
       isValid = false;
     }
 
-    // Confirm password validation
     if (!confirmPassword) {
       newErrors.confirmPassword = "Please confirm your password";
       isValid = false;
@@ -84,37 +88,24 @@ export default function RegisterScreen() {
       return;
     }
 
-    setErrors({ email: "", password: "", confirmPassword: "" });
+    setErrors({ name: "", email: "", password: "", confirmPassword: "" });
     setLoading(true);
     try {
-      console.log("Attempting signup with email:", email.trim());
-      await signUp(email.trim(), password);
-      console.log("Signup successful, navigating to tabs");
+      await signUp(email.trim(), password, name.trim());
       router.replace("/(tabs)");
     } catch (error: unknown) {
-      console.error("Registration error:", error);
-
       if (error instanceof AppAuthError) {
         switch (error.code) {
           case "EMAIL_IN_USE":
-            setErrors((prev) => ({
-              ...prev,
-              email: "Email is already in use",
-            }));
+            setErrors((prev) => ({ ...prev, email: "Email is already in use" }));
             Alert.alert(
               "Registration Failed",
               "This email is already in use. Try signing in instead.",
             );
             return;
           case "INVALID_EMAIL":
-            setErrors((prev) => ({
-              ...prev,
-              email: "Please enter a valid email",
-            }));
-            Alert.alert(
-              "Registration Failed",
-              "Please enter a valid email address.",
-            );
+            setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
+            Alert.alert("Registration Failed", "Please enter a valid email address.");
             return;
           case "WEAK_PASSWORD":
             setErrors((prev) => ({
@@ -133,18 +124,12 @@ export default function RegisterScreen() {
             );
             return;
           default:
-            Alert.alert(
-              "Registration Failed",
-              "Unable to create account. Please try again.",
-            );
+            Alert.alert("Registration Failed", "Unable to create account. Please try again.");
             return;
         }
       }
 
-      Alert.alert(
-        "Registration Failed",
-        "Unable to create account. Please try again.",
-      );
+      Alert.alert("Registration Failed", "Unable to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -182,6 +167,19 @@ export default function RegisterScreen() {
 
             <View style={authStyles.formContainer}>
               <AuthInput
+                label="Name"
+                placeholder="Enter your name"
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  setErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                error={errors.name}
+                autoCapitalize="words"
+                textContentType="name"
+              />
+
+              <AuthInput
                 label="Email"
                 placeholder="Enter your email"
                 value={email}
@@ -211,6 +209,11 @@ export default function RegisterScreen() {
                 textContentType="newPassword"
                 reserveErrorSpace={false}
               />
+              {!errors.password && (
+                <Text style={authStyles.hintText}>
+                  Use 8+ characters with uppercase, lowercase, and a number
+                </Text>
+              )}
 
               <AuthInput
                 label="Confirm Password"

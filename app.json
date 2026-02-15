@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "react-native-todo-app",
-    "slug": "react-native-todo-app",
+    "name": "Todo App",
+    "slug": "todo-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reactnativetodoapp",
+    "scheme": "todoapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

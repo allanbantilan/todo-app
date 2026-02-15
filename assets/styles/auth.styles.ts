@@ -61,12 +61,26 @@ export const createAuthStyles = (colors: ColorScheme) => {
       backgroundColor: colors.surface,
       overflow: "hidden",
     },
+    inputInner: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
     input: {
       paddingVertical: 16,
       paddingHorizontal: 16,
       fontSize: 16,
       color: colors.text,
       backgroundColor: "transparent",
+      flex: 1,
+    },
+    inputWithAction: {
+      paddingRight: 8,
+    },
+    inputAction: {
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      justifyContent: "center",
+      alignItems: "center",
     },
     inputError: {
       borderColor: colors.danger,

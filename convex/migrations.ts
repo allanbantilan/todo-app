@@ -48,3 +48,26 @@ export const clearPreAuthTodos = mutation({
     };
   },
 });
+
+// Run this once to clean broken auth data where accounts point to missing users
+export const cleanupOrphanAuthRecords = mutation({
+  handler: async (ctx) => {
+    const accounts = await ctx.db.query("authAccounts").collect();
+
+    let deletedAccounts = 0;
+
+    for (const account of accounts) {
+      const user = await ctx.db.get(account.userId);
+      if (!user) {
+        await ctx.db.delete(account._id);
+        deletedAccounts++;
+      }
+    }
+
+    return {
+      message: `Removed ${deletedAccounts} orphan auth account record(s).`,
+      totalAccounts: accounts.length,
+      deletedAccounts,
+    };
+  },
+});

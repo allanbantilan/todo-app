@@ -1,6 +1,7 @@
 import { createSettingsStyles } from "@/assets/styles/settings.styles";
 import DangerZone from "@/components/DangerZone";
 import Preferences from "@/components/Preferences";
+import ProfileSection from "@/components/ProfileSection";
 import ProgressStats from "@/components/ProgressStats";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,6 +38,8 @@ const Settings = () => {
           contentContainerStyle={settingsStyles.content}
           showsVerticalScrollIndicator={false}
         >
+          <ProfileSection />
+
           <ProgressStats />
 
           {/* PREFERENCES  */}

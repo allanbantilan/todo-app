@@ -111,7 +111,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: any | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -148,19 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name?: string) => {
     try {
-      console.log("AuthContext: signUp called with email:", email);
-      console.log("AuthContext: Calling signInAction with flow: signUp");
       const result = await signInAction("password", {
         email,
         password,
+        name,
         flow: "signUp",
       });
-      console.log("AuthContext: signUp result:", result);
       return result;
     } catch (error) {
-      console.error("AuthContext: signUp error:", error);
       throw normalizeAuthError(error, "signUp");
     }
   };
