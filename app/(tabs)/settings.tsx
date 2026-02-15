@@ -3,6 +3,7 @@ import DangerZone from "@/components/DangerZone";
 import Preferences from "@/components/Preferences";
 import ProfileSection from "@/components/ProfileSection";
 import ProgressStats from "@/components/ProgressStats";
+import VersionSection from "@/components/VersionSection";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -42,8 +43,9 @@ const Settings = () => {
 
           <ProgressStats />
 
-          {/* PREFERENCES  */}
           <Preferences />
+
+          <VersionSection />
 
           <DangerZone />
         </ScrollView>
