@@ -1,22 +1,35 @@
 import useTheme from "@/hooks/useTheme";
-import { Stack } from "expo-router";
+import { MaterialTopTabs } from "../(tabs)/_layout";
 
 export default function AuthLayout() {
   const { colors } = useTheme();
 
   return (
-    <Stack
+    <MaterialTopTabs
+      initialRouteName="login"
       screenOptions={{
-        headerShown: false,
-        animation: "fade",
-        contentStyle: {
+        tabBarStyle: {
+          display: "none",
+        },
+        swipeEnabled: false,
+        animationEnabled: true,
+        sceneStyle: {
           backgroundColor: colors.bg,
         },
-        presentation: "card",
       }}
     >
-      <Stack.Screen name="login" />
-      <Stack.Screen name="register" />
-    </Stack>
+      <MaterialTopTabs.Screen
+        name="login"
+        options={{
+          title: "Sign In",
+        }}
+      />
+      <MaterialTopTabs.Screen
+        name="register"
+        options={{
+          title: "Sign Up",
+        }}
+      />
+    </MaterialTopTabs>
   );
 }

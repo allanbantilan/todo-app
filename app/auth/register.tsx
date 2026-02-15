@@ -11,12 +11,13 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SystemBars } from "react-native-edge-to-edge";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
   const { colors } = useTheme();
@@ -104,6 +105,7 @@ export default function RegisterScreen() {
 
   return (
     <View style={authStyles.container}>
+      <SystemBars style={colors.statusBarStyle} />
       <SafeAreaView style={authStyles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}

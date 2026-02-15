@@ -8,15 +8,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
+import { SystemBars } from "react-native-edge-to-edge";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -79,6 +80,7 @@ export default function LoginScreen() {
 
   return (
     <View style={authStyles.container}>
+      <SystemBars style={colors.statusBarStyle} />
       <SafeAreaView style={authStyles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
