@@ -1,4 +1,5 @@
 import { useAuthActions } from "@convex-dev/auth/react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useConvexAuth } from "convex/react";
 import React, { createContext, ReactNode, useContext } from "react";
 
@@ -116,6 +117,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_SESSION_KEY = "@todo_app:has_authenticated_session";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn: signInAction, signOut: signOutAction } = useAuthActions();
@@ -128,6 +131,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
     );
   }, [isAuthenticated, isLoading]);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      AsyncStorage.setItem(AUTH_SESSION_KEY, "true").catch((error) => {
+        console.error("Failed to persist auth session:", error);
+      });
+    }
+  }, [isAuthenticated]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -157,6 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await signOutAction();
+      await AsyncStorage.removeItem(AUTH_SESSION_KEY);
     } catch (error) {
       throw error;
     }

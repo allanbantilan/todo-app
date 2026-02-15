@@ -12,10 +12,11 @@ import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useAutoSync } from "@/hooks/useAutoSync";
 import useTheme from "@/hooks/useTheme";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Alert,
     FlatList,
@@ -32,8 +33,9 @@ type SortOption = "default" | "highFirst" | "lowFirst";
 
 export default function Index() {
   const { toggleDarkMode, colors } = useTheme();
-  const { startSync, finishSync, errorSync } = useSyncStatus();
+  const { startSync, finishSync, errorSync, hasUnsyncedChanges } = useSyncStatus();
   const { isAutoSyncEnabled } = useAutoSync();
+  const { isOnline } = useNetworkStatus();
 
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -47,7 +49,7 @@ export default function Index() {
   const toggleTodo = useMutation(api.todos.toggleTodo);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const isLoading = todos === undefined;
+  const isLoading = todos === undefined && isOnline;
 
   // Extract unique categories from todos
   const categories = useMemo(() => {
@@ -59,6 +61,30 @@ export default function Index() {
   }, [todos]);
 
   // Filter and sort todos
+  const wasOnlineRef = useRef(isOnline);
+
+  useEffect(() => {
+    const cameOnline = !wasOnlineRef.current && isOnline;
+    wasOnlineRef.current = isOnline;
+
+    if (!cameOnline || !isAutoSyncEnabled || !hasUnsyncedChanges) {
+      return;
+    }
+
+    startSync();
+    const timer = setTimeout(() => {
+      finishSync();
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [
+    isOnline,
+    isAutoSyncEnabled,
+    hasUnsyncedChanges,
+    startSync,
+    finishSync,
+  ]);
+
   const filteredAndSortedTodos = useMemo(() => {
     if (!todos) return [];
 
