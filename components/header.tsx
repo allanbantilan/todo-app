@@ -1,15 +1,26 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
 import { useSyncStatus } from "@/contexts/SyncContext";
-import { api } from "@/convex/_generated/api";
+import { TodoItem } from "@/hooks/useOfflineTodos";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
 
-const Header = () => {
+type HeaderProps = {
+  todos: TodoItem[];
+  isAutoSyncEnabled: boolean;
+  hasPendingChanges: boolean;
+  onManualSync: () => void;
+};
+
+const Header: React.FC<HeaderProps> = ({
+  todos,
+  isAutoSyncEnabled,
+  hasPendingChanges,
+  onManualSync,
+}) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
   const { syncStatus, hasUnsyncedChanges } = useSyncStatus();
@@ -37,16 +48,14 @@ const Header = () => {
     outputRange: ["0deg", "360deg"],
   });
 
-  const todos = useQuery(api.todos.getTodos);
-
-  const completedCount = todos
-    ? todos.filter((todo) => todo.isCompleted).length
-    : 0;
-
-  const totalCount = todos ? todos.length : 0;
+  const completedCount = todos.filter((todo) => todo.isCompleted).length;
+  const totalCount = todos.length;
 
   const progressPercentage =
     totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  const showManualSyncButton =
+    isOnline && !isAutoSyncEnabled && hasPendingChanges;
 
   // Determine sync status text
   const getSyncStatusText = () => {
@@ -119,6 +128,41 @@ const Header = () => {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
+              {showManualSyncButton && (
+                <TouchableOpacity
+                  onPress={onManualSync}
+                  disabled={syncStatus === "syncing"}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    backgroundColor: colors.surface,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    marginRight: 2,
+                  }}
+                >
+                  <Ionicons
+                    name="sync"
+                    size={14}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "600",
+                      color: colors.primary,
+                    }}
+                  >
+                    Sync
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               {/* Sync Status Icon */}
               {syncStatus === "syncing" && (
                 <Animated.View style={{ transform: [{ rotate: spin }] }}>

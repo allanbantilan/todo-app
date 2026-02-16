@@ -1,16 +1,16 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import { TodoItem } from "@/hooks/useOfflineTodos";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type TodoListProps = {
-  item: Doc<"todos">;
+  item: TodoItem;
   homeStyles: ReturnType<typeof createHomeStyles>;
   colors: ReturnType<typeof useTheme>["colors"];
-  handleEditTodo: (item: Doc<"todos">) => void;
-  handleDeleteTodo: (id: Id<"todos">) => void;
+  handleEditTodo: (item: TodoItem) => void;
+  handleDeleteTodo: (id: string) => void;
 };
 
 const TodoList: React.FC<TodoListProps> = ({

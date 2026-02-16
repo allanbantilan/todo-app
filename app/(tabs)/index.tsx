@@ -9,51 +9,71 @@ import TodoList from "@/components/TodoList";
 import ToggleTodo from "@/components/ToggleTodo";
 import { useSyncStatus } from "@/contexts/SyncContext";
 import { api } from "@/convex/_generated/api";
-import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useAutoSync } from "@/hooks/useAutoSync";
+import { TodoItem, useOfflineTodos } from "@/hooks/useOfflineTodos";
 import useTheme from "@/hooks/useTheme";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    Text,
-    ToastAndroid,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Text,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SystemBars } from "react-native-edge-to-edge";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Todo = Doc<"todos">;
 type SortOption = "default" | "highFirst" | "lowFirst";
 
 export default function Index() {
   const { colors } = useTheme();
-  const { startSync, finishSync, errorSync, hasUnsyncedChanges } = useSyncStatus();
+  const { startSync, finishSync, errorSync } = useSyncStatus();
   const { isAutoSyncEnabled } = useAutoSync();
   const { isOnline } = useNetworkStatus();
 
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOption, setSortOption] = useState<SortOption>("default");
 
   const homeStyles = createHomeStyles(colors);
 
-  const todos = useQuery(api.todos.getTodos);
-  const toggleTodo = useMutation(api.todos.toggleTodo);
-  const deleteTodo = useMutation(api.todos.deleteTodo);
+  const remoteTodos = useQuery(api.todos.getTodos);
+  const addTodoRemote = useMutation(api.todos.addTodo);
+  const updateTodoRemote = useMutation(api.todos.updateTodo);
+  const toggleTodoRemote = useMutation(api.todos.toggleTodo);
+  const deleteTodoRemote = useMutation(api.todos.deleteTodo);
 
-  const isLoading = todos === undefined && isOnline;
+  const {
+    todos,
+    isInitialLoading,
+    hasPendingChanges,
+    addTodo,
+    updateTodo,
+    toggleTodo,
+    deleteTodo,
+    syncPendingChanges,
+  } = useOfflineTodos({
+    remoteTodos,
+    isOnline,
+    isAutoSyncEnabled,
+    startSync,
+    finishSync,
+    errorSync,
+    addTodoRemote,
+    updateTodoRemote,
+    toggleTodoRemote,
+    deleteTodoRemote,
+  });
 
   // Extract unique categories from todos
   const categories = useMemo(() => {
-    if (!todos) return [];
     const uniqueCategories = new Set(
       todos.map((todo) => todo.category || "Personal").filter(Boolean),
     );
@@ -61,33 +81,7 @@ export default function Index() {
   }, [todos]);
 
   // Filter and sort todos
-  const wasOnlineRef = useRef(isOnline);
-
-  useEffect(() => {
-    const cameOnline = !wasOnlineRef.current && isOnline;
-    wasOnlineRef.current = isOnline;
-
-    if (!cameOnline || !isAutoSyncEnabled || !hasUnsyncedChanges) {
-      return;
-    }
-
-    startSync();
-    const timer = setTimeout(() => {
-      finishSync();
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [
-    isOnline,
-    isAutoSyncEnabled,
-    hasUnsyncedChanges,
-    startSync,
-    finishSync,
-  ]);
-
   const filteredAndSortedTodos = useMemo(() => {
-    if (!todos) return [];
-
     // Filter by category
     let filtered = todos;
     if (selectedCategory !== "All") {
@@ -129,26 +123,23 @@ export default function Index() {
     return sorted;
   }, [todos, selectedCategory, sortOption]);
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isInitialLoading) return <LoadingSpinner />;
 
-  const handleToggleTodo = async (id: Id<"todos">, isCompleted: boolean) => {
+  const handleToggleTodo = async (id: string, isCompleted: boolean) => {
     try {
-      if (isAutoSyncEnabled) startSync();
-      await toggleTodo({ id });
-      if (isAutoSyncEnabled) finishSync();
+      await toggleTodo(id);
 
       ToastAndroid.show(
         isCompleted ? "Marked as incomplete" : "Marked as completed",
         ToastAndroid.SHORT,
       );
     } catch (error) {
-      if (isAutoSyncEnabled) errorSync();
       Alert.alert("Error", "Failed to toggle todo. Please try again.");
       console.error(error);
     }
   };
 
-  const handleDeleteTodo = async (id: Id<"todos">) => {
+  const handleDeleteTodo = async (id: string) => {
     Alert.alert(
       "Confirm Delete",
       "Are you sure you want to delete this todo?",
@@ -162,13 +153,10 @@ export default function Index() {
           style: "destructive",
           onPress: async () => {
             try {
-              if (isAutoSyncEnabled) startSync();
-              await deleteTodo({ id });
-              if (isAutoSyncEnabled) finishSync();
+              await deleteTodo(id);
 
               ToastAndroid.show("Todo deleted", ToastAndroid.SHORT);
             } catch (error) {
-              if (isAutoSyncEnabled) errorSync();
               Alert.alert("Error", "Failed to delete todo. Please try again.");
               console.error(error);
             }
@@ -178,9 +166,30 @@ export default function Index() {
     );
   };
 
-  const handleEditTodo = (item: Todo) => {
+  const handleEditTodo = (item: TodoItem) => {
     setEditingTodo(item);
     setIsEditModalVisible(true);
+  };
+
+  const handleAddTodo = async (input: {
+    text: string;
+    category: string;
+    priority: "High" | "Medium" | "Low";
+  }) => {
+    await addTodo(input);
+  };
+
+  const handleUpdateTodo = async (input: {
+    id: string;
+    text: string;
+    category: string;
+    priority: "High" | "Medium" | "Low";
+  }) => {
+    await updateTodo(input);
+  };
+
+  const handleManualSync = async () => {
+    await syncPendingChanges();
   };
 
   const getPriorityColor = (priority: string) => {
@@ -196,7 +205,7 @@ export default function Index() {
     }
   };
 
-  const renderTodoItem = ({ item }: { item: Todo }) => {
+  const renderTodoItem = ({ item }: { item: TodoItem }) => {
     const priority = item.priority || "Medium";
 
     return (
@@ -247,7 +256,12 @@ export default function Index() {
         style={homeStyles.safeArea}
         edges={["top", "left", "right"]}
       >
-        <Header />
+        <Header
+          todos={todos}
+          isAutoSyncEnabled={isAutoSyncEnabled}
+          hasPendingChanges={hasPendingChanges}
+          onManualSync={handleManualSync}
+        />
 
         {/* Add Todo Button Section */}
         <View style={homeStyles.addButtonSection}>
@@ -289,6 +303,7 @@ export default function Index() {
         <AddTodoModal
           visible={isAddModalVisible}
           onClose={() => setIsAddModalVisible(false)}
+          onSave={handleAddTodo}
         />
 
         <EditTodoModal
@@ -298,6 +313,7 @@ export default function Index() {
             setEditingTodo(null);
           }}
           todo={editingTodo}
+          onSave={handleUpdateTodo}
         />
       </SafeAreaView>
     </LinearGradient>

@@ -1,10 +1,6 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import { useSyncStatus } from "@/contexts/SyncContext";
-import { api } from "@/convex/_generated/api";
-import { useAutoSync } from "@/hooks/useAutoSync";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
@@ -32,21 +28,26 @@ const PREDEFINED_CATEGORIES = [
 interface AddTodoModalProps {
   visible: boolean;
   onClose: () => void;
+  onSave: (input: {
+    text: string;
+    category: string;
+    priority: Priority;
+  }) => Promise<void>;
 }
 
-const AddTodoModal: React.FC<AddTodoModalProps> = ({ visible, onClose }) => {
+const AddTodoModal: React.FC<AddTodoModalProps> = ({
+  visible,
+  onClose,
+  onSave,
+}) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
-  const { startSync, finishSync, errorSync } = useSyncStatus();
-  const { isAutoSyncEnabled } = useAutoSync();
 
   const [todoText, setTodoText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState<Priority>("Medium");
-
-  const addTodo = useMutation(api.todos.addTodo);
 
   const resetForm = () => {
     setTodoText("");
@@ -72,20 +73,17 @@ const AddTodoModal: React.FC<AddTodoModalProps> = ({ visible, onClose }) => {
     }
 
     try {
-      if (isAutoSyncEnabled) startSync();
-      await addTodo({
+      await onSave({
         text: todoText.trim(),
         category: finalCategory,
         priority: selectedPriority,
       });
-      if (isAutoSyncEnabled) finishSync();
 
       ToastAndroid.show("Todo added successfully", ToastAndroid.SHORT);
       resetForm();
       onClose();
       Keyboard.dismiss();
     } catch (error) {
-      if (isAutoSyncEnabled) errorSync();
       console.error("Error adding todo:", error);
       Alert.alert("Error", "Failed to add todo. Please try again.");
     }

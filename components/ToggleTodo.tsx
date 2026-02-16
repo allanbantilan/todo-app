@@ -1,15 +1,15 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import { TodoItem } from "@/hooks/useOfflineTodos";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { TouchableOpacity } from "react-native";
 
 type ToggleTodoProps = {
-  item: Doc<"todos">;
+  item: TodoItem;
   homeStyles: ReturnType<typeof createHomeStyles>;
   colors: ReturnType<typeof useTheme>["colors"];
-  handleToggleTodo: (id: Id<"todos">, isCompleted: boolean) => void;
+  handleToggleTodo: (id: string, isCompleted: boolean) => void;
   isEditing: boolean;
 };
 

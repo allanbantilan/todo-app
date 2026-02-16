@@ -1,11 +1,7 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import { useSyncStatus } from "@/contexts/SyncContext";
-import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
-import { useAutoSync } from "@/hooks/useAutoSync";
+import { TodoItem } from "@/hooks/useOfflineTodos";
 import useTheme from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
@@ -33,26 +29,29 @@ const PREDEFINED_CATEGORIES = [
 interface EditTodoModalProps {
   visible: boolean;
   onClose: () => void;
-  todo: Doc<"todos"> | null;
+  todo: TodoItem | null;
+  onSave: (input: {
+    id: string;
+    text: string;
+    category: string;
+    priority: Priority;
+  }) => Promise<void>;
 }
 
 const EditTodoModal: React.FC<EditTodoModalProps> = ({
   visible,
   onClose,
   todo,
+  onSave,
 }) => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
-  const { startSync, finishSync, errorSync } = useSyncStatus();
-  const { isAutoSyncEnabled } = useAutoSync();
 
   const [todoText, setTodoText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState<Priority>("Medium");
-
-  const updateTodo = useMutation(api.todos.updateTodo);
 
   // Load todo data when modal opens
   useEffect(() => {
@@ -102,21 +101,18 @@ const EditTodoModal: React.FC<EditTodoModalProps> = ({
     }
 
     try {
-      if (isAutoSyncEnabled) startSync();
-      await updateTodo({
+      await onSave({
         id: todo._id,
         text: todoText.trim(),
         category: finalCategory,
         priority: selectedPriority,
       });
-      if (isAutoSyncEnabled) finishSync();
 
       ToastAndroid.show("Todo updated successfully", ToastAndroid.SHORT);
       resetForm();
       onClose();
       Keyboard.dismiss();
     } catch (error) {
-      if (isAutoSyncEnabled) errorSync();
       console.error("Error updating todo:", error);
       Alert.alert("Error", "Failed to update todo. Please try again.");
     }
