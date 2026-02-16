@@ -39,8 +39,12 @@ export default function Index() {
     };
   }, []);
 
-  // Show loading while checking auth, network, and local session state.
-  if (isLoading || isNetworkLoading || hasAuthenticatedSession === null) {
+  const canOpenOffline = !isOnline && hasAuthenticatedSession === true;
+  const shouldWaitForAuth = isLoading && !canOpenOffline;
+
+  // Show loading while checking network/local session state and auth.
+  // If we're offline but have a known previous session, don't block on auth refresh.
+  if (shouldWaitForAuth || isNetworkLoading || hasAuthenticatedSession === null) {
     return (
       <View
         style={{
@@ -54,8 +58,6 @@ export default function Index() {
       </View>
     );
   }
-
-  const canOpenOffline = !isOnline && hasAuthenticatedSession;
 
   // Redirect based on auth state.
   return isAuthenticated || canOpenOffline ? (

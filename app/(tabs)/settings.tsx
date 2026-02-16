@@ -11,7 +11,7 @@ import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
-  const { colors, isDarkMode, toggleDarkMode } = useTheme();
+  const { colors } = useTheme();
 
   const settingsStyles = createSettingsStyles(colors);
 

@@ -32,7 +32,7 @@ type Todo = Doc<"todos">;
 type SortOption = "default" | "highFirst" | "lowFirst";
 
 export default function Index() {
-  const { toggleDarkMode, colors } = useTheme();
+  const { colors } = useTheme();
   const { startSync, finishSync, errorSync, hasUnsyncedChanges } = useSyncStatus();
   const { isAutoSyncEnabled } = useAutoSync();
   const { isOnline } = useNetworkStatus();
